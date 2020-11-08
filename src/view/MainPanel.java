@@ -1,40 +1,51 @@
 package view;
 
+import controller.TankWarOnlineApplication;
 import model.entity.Unit;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author Yhaobo
- * @since 2020/10/25
+ * @date 2020/10/25
  */
 public class MainPanel extends JPanel {
-    public static final Dimension DIMENSION = new Dimension(1600, 900);
-    private List<Unit> units;
+    private static Dimension dimension;
 
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-
-    public MainPanel(List<Unit> units) {
-        super(true);
-        this.units = units;
-        setPreferredSize(DIMENSION);
-        scheduler.scheduleAtFixedRate(this::repaint, 16, 16, TimeUnit.MILLISECONDS);
+    static {
+        final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        dimension = (new Dimension((int) (screenSize.getWidth() * .8), (int) (screenSize.getHeight() * .8)));
     }
 
-    public void setUnits(List<Unit> units) {
-        this.units = units;
+    private TankWarOnlineApplication application;
+
+    public MainPanel(TankWarOnlineApplication application) {
+        super(true);
+        this.application = application;
+        addKeyListener(application.getOperation());
+        addMouseListener(application.getOperation());
+        setPreferredSize(dimension);
+    }
+
+    public static Dimension getDimension() {
+        return dimension;
+    }
+
+    public static void setDimension(Dimension dimension) {
+        MainPanel.dimension = dimension;
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        for (Unit unit : units) {
-            unit.draw((Graphics2D) g);
+        for (Unit unit : application.getUnitList()) {
+            if (application.getPlayer() != null && application.getPlayer().getId().equals(unit.getId())) {
+                g.setColor(new Color(103, 194, 58));
+            } else {
+                g.setColor(new Color(245, 108, 108));
+            }
+            unit.draw(g);
         }
     }
 }

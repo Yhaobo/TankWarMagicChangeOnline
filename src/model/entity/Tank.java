@@ -4,69 +4,70 @@ import model.Position;
 import util.Constant;
 import view.MainPanel;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 
 /**
  * @author Yhaobo
- * @since 2020/10/25
+ * @date 2020/10/25
  */
 public class Tank extends MovableUnit {
-    private static BufferedImage img;
-
-    static {
-        try {
-            img = ImageIO.read(Cannonball.class.getResourceAsStream("/hero1.png"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
+    protected BufferedImage img;
     /**
      * 转向速度
      */
-    protected float turnSpeed = Constant.Tank.TURN_SPEED;
+    protected float turnSpeed = Constant.Tank.BASIC_TURN_SPEED;
     /**
-     * 前进加速度
+     * 加速度
      */
-    protected float acceleratedSpeed = Constant.Tank.ACCELERATED_SPEED;
+    protected float acceleratedSpeed = Constant.Tank.BASIC_ACCELERATED_SPEED;
+
+    public Tank() {
+    }
 
     public Tank(Position position) {
-        super(img, position, Constant.Tank.WIDTH, Constant.Tank.HEIGHT, Constant.Tank.MAX_SPEED, Constant.Tank.COLLISION_RADIUS, Constant.Tank.COLLISION_DECELERATION_RATE,Constant.Tank.DENSITY);
+        super( position, Constant.Tank.WIDTH, Constant.Tank.HEIGHT, Constant.Tank.COLLISION_RADIUS, Constant.Tank.COLLISION_DECELERATION_RATE, Constant.Tank.DENSITY);
     }
 
+    /**
+     * 转向
+     *
+     * @param isRightTurn true则右转, false则左转
+     */
     public void turn(boolean isRightTurn) {
-        float turnSpeed = (float) (this.turnSpeed * (maxSpeed / (Math.pow(speed, 2) + maxSpeed)));
+        final float turnSpeed = Math.min(this.turnSpeed * (Constant.Tank.WEIGHT / getWeight()), Constant.Tank.MAX_TURN_SPEED);
         if (isRightTurn) {
-            direction += turnSpeed;
+            this.direction += turnSpeed;
         } else {
-            direction -= turnSpeed;
+            this.direction -= turnSpeed;
         }
     }
 
+    /**
+     * 前进
+     */
     public void advance() {
+        final float acceleratedSpeed = Math.min(this.acceleratedSpeed * (Constant.Tank.WEIGHT / getWeight()), Constant.Tank.MAX_ACCELERATED_SPEED);
         if (speed >= 0) {
-            if (speed <= maxSpeed) {
-                speed += acceleratedSpeed;
-            } else {
-                speed = maxSpeed;
-            }
+            speed += acceleratedSpeed;
         } else {
-            speed += acceleratedSpeed * 2;
+            speed += acceleratedSpeed * 5;
         }
     }
 
+    /**
+     * 后退
+     */
     public void retreat() {
+        final float acceleratedSpeed = Math.min(this.acceleratedSpeed * (Constant.Tank.WEIGHT / getWeight()), Constant.Tank.MAX_ACCELERATED_SPEED);
         if (speed > 0) {
-            speed -= acceleratedSpeed * 2;
+            speed -= acceleratedSpeed * 5;
         } else {
-            if (speed >= -maxSpeed) {
-                speed -= acceleratedSpeed;
-            } else {
-                speed = -maxSpeed;
-            }
+            speed -= acceleratedSpeed;
         }
+    }
+
+    @Override
+    public void renew() {
     }
 
     @Override
@@ -76,28 +77,37 @@ public class Tank extends MovableUnit {
         float y = offset.getY();
 
         //检查是否越过边界, 越过则反弹并减速
-        if (x <= 0 || x >= MainPanel.DIMENSION.getWidth() - width) {
+        if (x <= 0 || x >= MainPanel.getDimension().getWidth() - getWidth()) {
             direction = (float) (Math.PI - direction);
             collisionDeceleration();
         }
-        if (y <= 0 || y >= MainPanel.DIMENSION.getHeight() - height) {
+        if (y <= 0 || y >= MainPanel.getDimension().getHeight() - getHeight()) {
             direction = -direction;
             collisionDeceleration();
         }
 
-        super.setPosition(x, y);
+        super.setPositionAndVerify(x, y);
     }
 
-    public Cannonball shot() {
-        float x = getCentrePosition().getX();
-        float y = getCentrePosition().getY();
-        final double radio = 2;
-        x += Math.cos(direction) * collisionRadius* radio - (Constant.Cannonball.WIDTH >> 1);
-        y += Math.sin(direction) * collisionRadius* radio - (Constant.Cannonball.HEIGHT >> 1);
-        final Cannonball cannonball = new Cannonball(new Position(x, y), 10, direction);
-        cannonball.setcollisionRadius((float) (Math.random() * 50)+10);
-        cannonball.width = (int) (cannonball.collisionRadius*2);
-        cannonball.height = (int) (cannonball.collisionRadius*2);
+    /**
+     * 射击
+     *
+     * @param radius 炮弹半径
+     * @return
+     */
+    public Cannonball shot(float radius) {
+        //处理炮弹出现位置
+        final Position position = this.displacement(radius + collisionRadius + 5, direction, getCentrePosition());
+        position.setX(position.getX() - radius);
+        position.setY(position.getY() - radius);
+        //生成炮弹, 炮弹方向为坦克方向
+        final Cannonball cannonball = new Cannonball(position, direction);
+        cannonball.setCollisionRadiusAndCorrelationField(radius);
+        //炮弹动能
+        final int energy = 500000;
+        cannonball.speed = energy / cannonball.getWeight() + this.speed;
+        this.speed -= energy / this.getWeight();
         return cannonball;
     }
+
 }

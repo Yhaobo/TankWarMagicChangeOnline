@@ -1,5 +1,6 @@
 package model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import model.Position;
 import util.Constant;
 import util.Vector2d;
@@ -10,37 +11,26 @@ import java.awt.image.BufferedImage;
 
 /**
  * @author Yhaobo
- * @since 2020/10/27
+ * @date 2020/10/27
  */
-public abstract class MovableUnit implements Unit {
-    /**
-     * 单位图片
-     */
-    protected BufferedImage img;
-    /**
-     * 定位
-     */
-    protected Position position;
+
+public abstract class MovableUnit extends Unit {
     /**
      * 宽
      */
-    protected int width;
+    private int width;
     /**
      * 高
      */
-    protected int height;
+    private int height;
     /**
      * 方向 (弧度)
      */
-    protected float direction = (float) (Math.PI * 2 * Math.random());
+    protected float direction;
     /**
      * 前进速度
      */
     protected float speed;
-    /**
-     * 最大速度
-     */
-    protected float maxSpeed;
     /**
      * 碰撞半径
      */
@@ -56,18 +46,24 @@ public abstract class MovableUnit implements Unit {
     /**
      * 重量
      */
-    protected float weight;
+    private float weight;
 
-    public MovableUnit(BufferedImage img, Position position, int width, int height, float maxSpeed, float collisionRadius, float collisionDecelerationRate, float density) {
-        this.img = img;
-        setPosition(position);
+    public MovableUnit() {
+    }
+
+    public MovableUnit(BufferedImage img, Position position, int width, int height, float collisionRadius, float collisionDecelerationRate, float density) {
+        this(position,width,height,collisionRadius,collisionDecelerationRate,density);
+        setImgAndTempImg(img);
+    }
+
+    public MovableUnit(Position position, int width, int height, float collisionRadius, float collisionDecelerationRate, float density) {
         this.width = width;
         this.height = height;
-        this.maxSpeed = maxSpeed;
         this.collisionRadius = collisionRadius;
         this.collisionDecelerationRate = collisionDecelerationRate;
         this.density = density;
-        tempImg = new BufferedImage(img.getWidth(), img.getHeight(), img.getType());
+        this.direction = (float) (Math.PI * 2 * Math.random());
+        setPositionAndVerify(position);
         computeAndSetWeight();
     }
 
@@ -75,8 +71,15 @@ public abstract class MovableUnit implements Unit {
         this.weight = (float) (density * Math.pow(collisionRadius, 3));
     }
 
-    protected void setcollisionRadius(float radius) {
+    /**
+     * 设置碰撞半径, 同时设置与其相关的属性字段
+     *
+     * @param radius
+     */
+    protected void setCollisionRadiusAndCorrelationField(float radius) {
         this.collisionRadius = radius;
+        this.width = Math.round(radius * 2);
+        this.height = Math.round(radius * 2);
         computeAndSetWeight();
     }
 
@@ -85,16 +88,15 @@ public abstract class MovableUnit implements Unit {
         /**
          * 撞击处理 (都当做小球弹性碰撞)
          */
-        public static void handleCollision(MovableUnit unit1, MovableUnit unit2, double intersectsLength) {
-            //碰撞分离(防止粘连)
-//            float radian = (float) computeRadian(unit1.position, unit2.position);
-//            unit1.setPosition(unit1.displacement(intersectsLength / 2, (float) (Math.PI + radian)));
-//            unit2.setPosition(unit2.displacement(intersectsLength / 2, radian));
+        public static void handleCollision(MovableUnit unit1, MovableUnit unit2) {
             //碰撞
             ballCollide(unit1, unit2);
-            //速度受损
-            //        unit1.collisionDeceleration();
-            //        unit2.collisionDeceleration();
+            //如果粘合在一起,则增加两个小球的速度
+            if (detectionIntersects(unit1, unit2) < 0) {
+                final float incrementalSpeed = Constant.INTERSECTION_SPEED_UP;
+                unit1.speed += incrementalSpeed;
+                unit2.speed += incrementalSpeed;
+            }
         }
 
         /**
@@ -128,12 +130,12 @@ public abstract class MovableUnit implements Unit {
             if (ball1.weight == ball2.weight) {
                 // 质量相等
                 ball1SpeedHorizontalProjectionFinalLength = ball2SpeedHorizontalProjectionLength;
-                ball2SpeedHorizontalProjectionFinalLength = ball1SpeedPerpendicularProjectionLength;
+                ball2SpeedHorizontalProjectionFinalLength = ball1SpeedHorizontalProjectionLength;
             } else {
                 // 质量不相等
                 ball1SpeedHorizontalProjectionFinalLength = (ball1SpeedHorizontalProjectionLength * (ball1.weight - ball2.weight) + 2 * ball2.weight * ball2SpeedHorizontalProjectionLength)
                         / (ball1.weight + ball2.weight);
-                ball2SpeedHorizontalProjectionFinalLength= (ball2SpeedHorizontalProjectionLength * (ball2.weight - ball1.weight) + 2 * ball1.weight * ball1SpeedHorizontalProjectionLength)
+                ball2SpeedHorizontalProjectionFinalLength = (ball2SpeedHorizontalProjectionLength * (ball2.weight - ball1.weight) + 2 * ball1.weight * ball1SpeedHorizontalProjectionLength)
                         / (ball1.weight + ball2.weight);
             }
 
@@ -152,6 +154,17 @@ public abstract class MovableUnit implements Unit {
             // 更新速度
             applyVector(ball1SpeedFinalVector, ball1);
             applyVector(ball2SpeedFinalVector, ball2);
+
+            // 碰撞伤害
+            collisionalDamage((float) ball1SpeedFinalVector.subtract(ball1SpeedInitial).getLength(), ball1);
+            collisionalDamage((float) ball2SpeedFinalVector.subtract(ball2SpeedInitial).getLength(), ball2);
+        }
+
+        /**
+         * 相撞后根据被撞击力度减少半径长度
+         */
+        private static void collisionalDamage(float impact,MovableUnit unit) {
+            unit.setCollisionRadiusAndCorrelationField(unit.getCollisionRadius() - impact/2);
         }
 
         /**
@@ -179,9 +192,27 @@ public abstract class MovableUnit implements Unit {
          * @param unit2 碰撞单位2
          * @return 大于0, 则没有碰撞, 小于等于0, 则碰撞
          */
-        public static double inAdvanceDetectionIntersects(MovableUnit unit1, MovableUnit unit2) {
+        public static boolean inAdvanceDetectionIntersects(MovableUnit unit1, MovableUnit unit2) {
             final Position centrePosition1 = unit2.getCentrePosition(unit2.displacement());
             final Position centrePosition2 = unit1.getCentrePosition(unit1.displacement());
+
+            float x = centrePosition1.getX() - centrePosition2.getX();
+            float y = centrePosition1.getY() - centrePosition2.getY();
+            double distance = Math.sqrt(x * x + y * y);
+
+            return distance < (unit2.collisionRadius + unit1.collisionRadius);
+        }
+
+        /**
+         * 判断两个单位有没有碰撞(圆形碰撞检测)
+         *
+         * @param unit1 碰撞单位1
+         * @param unit2 碰撞单位2
+         * @return 大于0, 则没有碰撞, 小于等于0, 则碰撞
+         */
+        public static double detectionIntersects(MovableUnit unit1, MovableUnit unit2) {
+            final Position centrePosition1 = unit2.getCentrePosition();
+            final Position centrePosition2 = unit1.getCentrePosition();
 
             float x = centrePosition1.getX() - centrePosition2.getX();
             float y = centrePosition1.getY() - centrePosition2.getY();
@@ -202,33 +233,22 @@ public abstract class MovableUnit implements Unit {
         }
     }
 
-    @Override
-    public Position getCentrePosition() {
-        return getCentrePosition(position);
-    }
-
     protected Position getCentrePosition(Position position) {
         return new Position(position.getX() + (width >> 1), position.getY() + (height >> 1));
     }
 
-    @Override
-    public float getCollisionRadius() {
-        return collisionRadius;
-    }
-
-    @Override
-    public Unit setPosition(Position position) {
+    public Unit setPositionAndVerify(Position position) {
         if (this.position == null) {
             this.position = position;
         }
-        return setPosition(position.getX(), position.getY());
+        return setPositionAndVerify(position.getX(), position.getY());
     }
 
-    protected Unit setPosition(float x, float y) {
+    protected Unit setPositionAndVerify(float x, float y) {
         if (x < 0) {
             x = 0;
         } else {
-            final float width = (float) (MainPanel.DIMENSION.getWidth() - this.width);
+            final float width = (float) (MainPanel.getDimension().getWidth() - this.width);
             if (x > width) {
                 x = width;
             }
@@ -236,7 +256,7 @@ public abstract class MovableUnit implements Unit {
         if (y < 0) {
             y = 0;
         } else {
-            final float height = (float) (MainPanel.DIMENSION.getHeight() - this.height);
+            final float height = (float) (MainPanel.getDimension().getHeight() - this.height);
             if (y > height) {
                 y = height;
             }
@@ -248,8 +268,13 @@ public abstract class MovableUnit implements Unit {
         return this;
     }
 
+    public void setImgAndTempImg(BufferedImage img) {
+        super.img = img;
+        this.tempImg = new BufferedImage(img.getWidth(), img.getHeight(), img.getType());
+    }
+
     /**
-     * 真正显示的图片
+     * 真正用于显示的图片(涉及图片旋转操作)
      */
     private BufferedImage tempImg;
     /**
@@ -265,13 +290,15 @@ public abstract class MovableUnit implements Unit {
             previousDirection = direction;
             initialFlag = false;
             final Graphics2D tempImgGraphics = tempImg.createGraphics();
+            //覆盖背景
             tempImgGraphics.setColor(new Color(238, 238, 238));
-            tempImgGraphics.fillOval(-30, -30, img.getWidth() + 60, img.getHeight() + 60);
+            final int offset = 13;
+            tempImgGraphics.fillOval(-offset, -offset, img.getWidth() + offset * 2, img.getHeight() + offset * 2);
+            //旋转
             tempImgGraphics.rotate(direction, img.getWidth() >> 1, img.getHeight() >> 1);
+            //最后把图片放上去
             tempImgGraphics.drawImage(img, null, null);
-//            tempImg= RotateImageUtil.rotateImage(img, direction);
         }
-//        g.fillOval(Math.round(position.getX()), Math.round(position.getY()), width, height);
         g.drawImage(tempImg, Math.round(position.getX()), Math.round(position.getY()), width, height, null);
     }
 
@@ -294,8 +321,20 @@ public abstract class MovableUnit implements Unit {
         return new Position(x, y);
     }
 
-    protected Vector2d getVector() {
-        return CollisionHandler.getVector(this.direction, this.speed);
+    /**
+     * 返回经过位移计算后的新定位
+     *
+     * @param length    位移长度
+     * @param direction 方向
+     * @param position  原定位
+     * @return 新定位
+     */
+    protected Position displacement(float length, float direction, Position position) {
+        float x = position.getX();
+        float y = position.getY();
+        x += Math.cos(direction) * length;
+        y += Math.sin(direction) * length;
+        return new Position(x, y);
     }
 
     /**
@@ -305,6 +344,33 @@ public abstract class MovableUnit implements Unit {
 
     protected void collisionDeceleration() {
         this.speed *= collisionDecelerationRate;
+    }
+
+    /**
+     * 返回单位的碰撞半径
+     *
+     * @return 碰撞半径
+     */
+    public float getCollisionRadius() {
+        return collisionRadius;
+    }
+
+    public void setCollisionRadius(float collisionRadius) {
+        setCollisionRadiusAndCorrelationField(collisionRadius);
+    }
+
+    /**
+     * 返回单位的中心点定位
+     *
+     * @return 中心定位
+     */
+    @JsonIgnore
+    public Position getCentrePosition() {
+        return getCentrePosition(position);
+    }
+
+    protected Vector2d getVector() {
+        return CollisionHandler.getVector(this.direction, this.speed);
     }
 
     public float getDirection() {
@@ -321,5 +387,57 @@ public abstract class MovableUnit implements Unit {
 
     public void setSpeed(float speed) {
         this.speed = speed;
+    }
+
+    @JsonIgnore
+    public float getCollisionDecelerationRate() {
+        return collisionDecelerationRate;
+    }
+
+    public void setCollisionDecelerationRate(float collisionDecelerationRate) {
+        this.collisionDecelerationRate = collisionDecelerationRate;
+    }
+
+    @JsonIgnore
+    public float getDensity() {
+        return density;
+    }
+
+    public void setDensity(float density) {
+        this.density = density;
+    }
+
+    @JsonIgnore
+    public int getWidth() {
+        return width;
+    }
+
+    @JsonIgnore
+    public int getHeight() {
+        return height;
+    }
+
+    @JsonIgnore
+    public float getWeight() {
+        return weight;
+    }
+
+    @Override
+    public String toString() {
+        return "MovableUnit{" +
+                "id=" + getId() +
+                ", position=" + position +
+                ", width=" + width +
+                ", height=" + height +
+                ", direction=" + direction +
+                ", speed=" + speed +
+                ", collisionRadius=" + collisionRadius +
+                ", collisionDecelerationRate=" + collisionDecelerationRate +
+                ", density=" + density +
+                ", weight=" + weight +
+                ", tempImg=" + tempImg +
+                ", previousDirection=" + previousDirection +
+                ", initialFlag=" + initialFlag +
+                '}';
     }
 }

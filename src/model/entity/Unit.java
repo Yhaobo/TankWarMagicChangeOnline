@@ -1,42 +1,82 @@
 package model.entity;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import model.Position;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 游戏中的抽象单位, 坦克和炮弹都是单位
  *
  * @author Yhaobo
- * @since 2020/10/25
+ * @date 2020/10/25
  */
-public interface Unit {
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.CLASS)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = Tank.class),
+        @JsonSubTypes.Type(value = Player.class),
+        @JsonSubTypes.Type(value = MovableUnit.class)
+})
+public abstract class Unit implements Identification {
     /**
-     * 返回单位的中心点定位
-     *
-     * @return 中心定位
+     * 单位图片
      */
-    Position getCentrePosition();
+    protected BufferedImage img;
+    /**
+     * 定位
+     */
+    protected Position position;
+
+    protected String id = UUID.randomUUID().toString();
 
     /**
-     * 返回单位的碰撞半径
+     * 返回单位的定位
      *
-     * @return 碰撞半径
+     * @return 定位
      */
-    float getCollisionRadius();
+    public Position getPosition() {
+        return position;
+    }
 
-    /**
-     * 设置单位的定位
-     *
-     * @param position 定位
-     */
-    Unit setPosition(Position position);
+
+    public void setPosition(Position position) {
+        this.position = position;
+    }
 
     /**
      * 绘制
      *
      * @param g 画布
      */
-    void draw(Graphics g);
+    public void draw(Graphics g) {
+        g.drawImage(img, Math.round(position.getX()), Math.round(position.getY()), img.getWidth(), img.getHeight(), null);
+    }
 
+    /**
+     * 反序列化生成的此类对象(只有部分属性赋值), 可以使用此方法来初始化其他必须的属性(从而成为可用的实体)
+     */
+    public abstract void renew();
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Unit unit = (Unit) o;
+        return id.equals(unit.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
