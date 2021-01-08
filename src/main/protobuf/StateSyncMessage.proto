@@ -1,0 +1,37 @@
+syntax = "proto3";//版本
+option java_package = "model.network.dto";//包名
+option optimize_for = SPEED;//最快解析
+option java_outer_classname = "StateSyncMessageInfo";//生成的外部类名，同时也是文件名
+
+message HostSendDatagram{
+  repeated UnitSyncState unit_sync_state = 1;
+
+  //在{@link TankWarOnlineApplication#unitList}中被删除单位的索引数组(每次同步都会重置)
+  repeated int32 deleted_unit_index_list = 2;
+}
+
+message SlaveSendDatagram{
+  bool front = 1;
+  bool back = 2;
+  bool left = 3;
+  bool right = 4;
+
+  int32 cannonball_size = 5;
+}
+
+//单位要同步的状态
+message UnitSyncState{
+  Position position = 1;
+  float direction = 2;
+  float speed = 3;
+  float collision_radius = 4;
+  //class全类名
+  string type = 5;
+  string id=6;
+  int32 hero_idx=7;
+}
+
+message Position{
+  float x = 1;
+  float y = 2;
+}
