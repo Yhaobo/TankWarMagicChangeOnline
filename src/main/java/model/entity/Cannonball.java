@@ -1,7 +1,7 @@
 package model.entity;
 
 import model.Position;
-import util.Constant;
+import model.Constant;
 import view.MainPanel;
 
 import javax.imageio.ImageIO;
@@ -28,7 +28,7 @@ public class Cannonball extends MovableUnit {
     /**
      * 加速度
      */
-    protected float acceleratedSpeed = Constant.Cannonball.ACCELERATED_SPEED;
+    protected float acceleration = Constant.Cannonball.BASIC_ACCELERATION;
 
     public Cannonball() {
     }
@@ -41,15 +41,15 @@ public class Cannonball extends MovableUnit {
     @Override
     public void renew() {
         super.setImgAndTempImg(Cannonball.img);
-        super.setCollisionRadiusAndCorrelationField(collisionRadius);
+        super.setCollisionRadius(collisionRadius);
         super.collisionDecelerationRate = Constant.Cannonball.COLLISION_DECELERATION_RATE;
     }
 
     @Override
     public void move() {
-        final Position offset = super.displacement();
-        float x = offset.getX();
-        float y = offset.getY();
+        final Position displacement = super.displacement();
+        float x = displacement.getX();
+        float y = displacement.getY();
 
         //检查是否越过边界, 越过则反弹并减速
         if (x < 0 || x > MainPanel.getDimension().getWidth() - getWidth()) {
@@ -61,10 +61,12 @@ public class Cannonball extends MovableUnit {
         }
 
         //速度不断变慢
-        if (this.speed > 0) {
-            this.speed += this.acceleratedSpeed * Math.pow(speed, 2);
-        } else {
-            this.speed = 0;
+        if (this.acceleration != 0) {
+            if (this.speed > 0) {
+                this.speed += this.acceleration * Math.pow(speed, 2);
+            } else {
+                this.speed = 0;
+            }
         }
         super.setPositionAndVerify(x, y);
     }
@@ -72,7 +74,7 @@ public class Cannonball extends MovableUnit {
     @Override
     public String toString() {
         return "Cannonball{" +
-                "acceleratedSpeed=" + acceleratedSpeed +
+                "acceleratedSpeed=" + acceleration +
                 ", direction=" + direction +
                 ", speed=" + speed +
                 ", collisionRadius=" + collisionRadius +

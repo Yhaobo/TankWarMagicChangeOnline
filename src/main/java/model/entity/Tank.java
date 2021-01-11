@@ -1,7 +1,7 @@
 package model.entity;
 
 import model.Position;
-import util.Constant;
+import model.Constant;
 import view.MainPanel;
 
 import java.awt.image.BufferedImage;
@@ -19,13 +19,13 @@ public abstract class Tank extends MovableUnit {
     /**
      * 加速度
      */
-    protected float acceleratedSpeed = Constant.Tank.BASIC_ACCELERATED_SPEED;
+    protected float acceleration = Constant.Tank.BASIC_ACCELERATION;
 
     public Tank() {
     }
 
     public Tank(Position position) {
-        super( position, Constant.Tank.WIDTH, Constant.Tank.HEIGHT, Constant.Tank.COLLISION_RADIUS, Constant.Tank.COLLISION_DECELERATION_RATE, Constant.Tank.DENSITY);
+        super(position, Constant.Tank.WIDTH, Constant.Tank.HEIGHT, Constant.Tank.COLLISION_RADIUS, Constant.Tank.COLLISION_DECELERATION_RATE, Constant.Tank.DENSITY);
     }
 
     /**
@@ -34,7 +34,7 @@ public abstract class Tank extends MovableUnit {
      * @param isRightTurn true则右转, false则左转
      */
     public void turn(boolean isRightTurn) {
-        final float turnSpeed = Math.min(this.turnSpeed * (Constant.Tank.WEIGHT / getWeight()), Constant.Tank.MAX_TURN_SPEED);
+        final float turnSpeed = Math.min(this.turnSpeed * (Constant.Tank.MASS / getMass()), Constant.Tank.MAX_TURN_SPEED);
         if (isRightTurn) {
             this.direction += turnSpeed;
         } else {
@@ -46,26 +46,25 @@ public abstract class Tank extends MovableUnit {
      * 前进
      */
     public void advance() {
-        final float acceleratedSpeed = Math.min(this.acceleratedSpeed * (Constant.Tank.WEIGHT / getWeight()), Constant.Tank.MAX_ACCELERATED_SPEED);
+        final float acceleration = Math.min(this.acceleration * (Constant.Tank.MASS / getMass()), Constant.Tank.MAX_ACCELERATED_SPEED);
         if (speed >= 0) {
-            speed += acceleratedSpeed;
+            speed += acceleration;
         } else {
-            speed += acceleratedSpeed * 5;
+            speed += acceleration * 5;
         }
     }
 
     /**
-     * 后退
+     * 刹车
      */
-    public void retreat() {
-        final float acceleratedSpeed = Math.min(this.acceleratedSpeed * (Constant.Tank.WEIGHT / getWeight()), Constant.Tank.MAX_ACCELERATED_SPEED);
+    public void braking() {
+        final float acceleratedSpeed = Math.min(this.acceleration * (Constant.Tank.MASS / getMass()), Constant.Tank.MAX_ACCELERATED_SPEED);
         if (speed > 0) {
-            speed -= acceleratedSpeed * 5;
+            speed = Math.max(speed -= acceleratedSpeed * 5, 0);
         } else {
-            speed -= acceleratedSpeed;
+            speed = 0;
         }
     }
-
 
     @Override
     public void move() {
@@ -99,11 +98,12 @@ public abstract class Tank extends MovableUnit {
         position.setY(position.getY() - radius);
         //生成炮弹, 炮弹方向为坦克方向
         final Cannonball cannonball = new Cannonball(position, direction);
-        cannonball.setCollisionRadiusAndCorrelationField(radius);
+        cannonball.setCollisionRadius(radius);
         //炮弹动能
-        final int energy = 500000;
-        cannonball.speed = energy / cannonball.getWeight() + this.speed;
-        this.speed -= energy / this.getWeight();
+        final int energy = Constant.Tank.SHOT_KINETIC_ENERGY;
+        cannonball.speed = energy / cannonball.getMass() + this.speed;
+        //反作用力
+        this.speed -= energy / this.getMass();
         return cannonball;
     }
 

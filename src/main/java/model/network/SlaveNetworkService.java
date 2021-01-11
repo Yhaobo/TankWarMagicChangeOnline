@@ -6,7 +6,7 @@ import model.entity.Unit;
 import model.network.dto.StateSyncMessageInfo;
 import model.network.tool.UdpReceiver;
 import model.network.tool.UdpSender;
-import util.Constant;
+import model.Constant;
 import view.MainPanel;
 
 import java.awt.*;
@@ -72,8 +72,9 @@ public class SlaveNetworkService extends NetworkService {
             final List<Integer> deleteUnitIndexList = datagram.getDeletedUnitIndexListList();
             //新删除的单位
             if (deleteUnitIndexList.size() > 0) {
-                for (int i : deleteUnitIndexList) {
-                    oldUnits.remove(i);
+                //注意：必须从后往前删除，防止删除前面的导致后面元素索引发生变化
+                for (int i = deleteUnitIndexList.size() - 1; i >= 0; i--) {
+                    oldUnits.remove((int) deleteUnitIndexList.get(i));
                 }
             }
 

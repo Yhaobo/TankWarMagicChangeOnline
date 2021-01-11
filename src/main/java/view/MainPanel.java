@@ -1,10 +1,13 @@
 package view;
 
 import controller.TankWarOnlineApplication;
+import model.entity.Player;
 import model.entity.Unit;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Yhaobo
@@ -39,14 +42,24 @@ public class MainPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        List<Player> playerList = new ArrayList<>();
         for (int i = 0; i < application.getUnitList().size(); i++) {
             Unit unit = application.getUnitList().get(i);
-            if (application.getPlayer() != null && application.getPlayer().getId().equals(unit.getId())) {
+            if (application.getPlayer() != null && unit instanceof Player) {
+                playerList.add((Player) unit);
+            } else {
+                unit.draw(g);
+            }
+        }
+        //将玩家最后渲染以保证玩家上方显示信息不被遮盖
+        playerList.sort((o1, o2) -> (int) (o1.getPosition().getY()-o2.getPosition().getY()));
+        for (Player player : playerList) {
+            if (application.getPlayer().getId().equals(player.getId())) {
                 g.setColor(new Color(103, 194, 58));
             } else {
                 g.setColor(new Color(245, 108, 108));
             }
-            unit.draw(g);
+            player.draw(g);
         }
     }
 }

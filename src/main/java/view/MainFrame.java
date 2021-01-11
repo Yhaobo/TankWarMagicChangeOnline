@@ -89,6 +89,7 @@ public class MainFrame extends JFrame {
                                 rightSidePanel.setVisible(false);
                                 packAndSetLocationRelativeToCenter();
                                 application.switchSlaveMode(playerId);
+                                mainPanel.requestFocus();
                                 setTitle(getTitle() + "（联机模式：从机）");
                             }
                         } catch (Exception exception) {
@@ -139,6 +140,15 @@ public class MainFrame extends JFrame {
         rightSidePanel.add(hostList);
         rightSidePanel.add(createRoomBtn);
         this.add(rightSidePanel, BorderLayout.EAST);
+
+        //下方提示区
+        JPanel noticePanel = new JPanel();
+        noticePanel.setBackground(Color.LIGHT_GRAY);
+        JLabel label = new JLabel();
+        label.setFont(new Font("楷体", Font.BOLD, 20));
+        label.setText("操作说明: 按【W】【A】【S】【D】来控制单位，按【J】【K】【L】射击");
+        noticePanel.add(label);
+        this.add(noticePanel,BorderLayout.SOUTH);
     }
 
     private void packAndSetLocationRelativeToCenter() {

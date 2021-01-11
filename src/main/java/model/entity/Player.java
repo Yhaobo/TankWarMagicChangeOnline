@@ -1,7 +1,7 @@
 package model.entity;
 
 import model.Position;
-import util.Constant;
+import model.Constant;
 import view.MainPanel;
 
 import javax.imageio.ImageIO;
@@ -91,7 +91,7 @@ public class Player extends Tank {
             this.img = ImageIO.read(Player.class.getResourceAsStream("/hero" + heroIdx + ".png"));
             super.setImgAndTempImg(this.img);
             super.setDensity(Constant.Tank.DENSITY);
-            super.setCollisionRadiusAndCorrelationField(collisionRadius);
+            super.setCollisionRadius(collisionRadius);
             super.collisionDecelerationRate = Constant.Tank.COLLISION_DECELERATION_RATE;
             this.name = InetAddress.getLocalHost().getCanonicalHostName();
         } catch (IOException e) {
@@ -104,7 +104,7 @@ public class Player extends Tank {
         g.setFont(new Font("宋体", Font.BOLD, 20));
         g.drawString(name, Math.round(this.position.getX()), Math.round(this.position.getY() - 35));
         g.drawRect(Math.round(this.position.getX()), Math.round(this.position.getY() - 30), this.getWidth(), 10);
-        g.fillRect(Math.round(this.position.getX()), Math.round(this.position.getY() - 30), Math.round(this.getWidth() * (getWeight() / Constant.Tank.WEIGHT)), 10);
+        g.fillRect(Math.round(this.position.getX()), Math.round(this.position.getY() - 30), Math.round(this.getWidth() * (getMass() / Constant.Tank.MASS)), 10);
         super.draw(g);
     }
 
@@ -128,7 +128,7 @@ public class Player extends Tank {
     public String toString() {
         return "Player{" +
                 "turnSpeed=" + turnSpeed +
-                ", acceleratedSpeed=" + acceleratedSpeed +
+                ", acceleratedSpeed=" + acceleration +
                 ", id=" + getId() +
                 ", position=" + position +
                 ", direction=" + direction +
@@ -136,7 +136,7 @@ public class Player extends Tank {
                 ", collisionRadius=" + collisionRadius +
                 ", collisionDecelerationRate=" + collisionDecelerationRate +
                 ", density=" + density +
-                ", weight=" + getWeight() +
+                ", mass=" + getMass() +
                 '}';
     }
 

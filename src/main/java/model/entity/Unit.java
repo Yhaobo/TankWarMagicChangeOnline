@@ -1,6 +1,7 @@
 package model.entity;
 
 import model.Position;
+import view.MainPanel;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -23,8 +24,15 @@ public abstract class Unit implements Identification {
      * 定位
      */
     protected Position position;
-
-    protected String id = UUID.randomUUID().toString().replace("-","");
+    /**
+     * 宽
+     */
+    protected int width;
+    /**
+     * 高
+     */
+    protected int height;
+    protected String id = UUID.randomUUID().toString().replace("-", "");
 
     /**
      * 返回单位的定位
@@ -35,9 +43,39 @@ public abstract class Unit implements Identification {
         return position;
     }
 
-
     public void setPosition(Position position) {
         this.position = position;
+    }
+
+    public Unit setPositionAndVerify(Position position) {
+        if (this.position == null) {
+            this.position = position;
+        }
+        return setPositionAndVerify(position.getX(), position.getY());
+    }
+
+    protected Unit setPositionAndVerify(float x, float y) {
+        if (x < 0) {
+            x = 0;
+        } else {
+            final float width = (float) (MainPanel.getDimension().getWidth() - this.width);
+            if (x > width) {
+                x = width;
+            }
+        }
+        if (y < 0) {
+            y = 0;
+        } else {
+            final float height = (float) (MainPanel.getDimension().getHeight() - this.height);
+            if (y > height) {
+                y = height;
+            }
+        }
+
+        position.setX(x);
+        position.setY(y);
+
+        return this;
     }
 
     /**
@@ -71,6 +109,5 @@ public abstract class Unit implements Identification {
     public int hashCode() {
         return Objects.hash(id);
     }
-
 
 }

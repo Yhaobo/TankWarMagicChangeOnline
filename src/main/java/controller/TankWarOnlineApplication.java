@@ -5,13 +5,16 @@ import model.entity.Cannonball;
 import model.entity.MovableUnit;
 import model.entity.Player;
 import model.entity.Unit;
+import model.interaction.CollisionSimulationTool;
+import model.interaction.GravitationSimulationTool;
 import model.network.HostNetworkService;
 import model.network.NetworkService;
 import model.network.SlaveNetworkService;
-import util.Constant;
+import model.Constant;
 import view.MainFrame;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -19,6 +22,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
+ *
  * @author Yhaobo
  * @date 2020/10/25
  */
@@ -127,37 +131,47 @@ public class TankWarOnlineApplication {
 
     /**
      * 每一步的处理
+     *
+     * @return 被删除单位的下标索引集合
      */
     private List<Integer> step() {
+        //处理玩家操作
         final Cannonball cannonball = operation.handlePlayerAction(this.player);
         if (cannonball != null) {
             unitList.add(cannonball);
         }
-        //要删除单位的索引列表
+        //声明 被删除单位的下标索引集合
         List<Integer> removeIndex = new ArrayList<>(unitList.size() >> 1);
-        for (int i = 0; i < unitList.size(); i++) {
-            Unit unit1 = unitList.get(i);
+        //遍历所有单位
+        Iterator<Unit> iterator = unitList.iterator();
+        int index = -1;
+        while (iterator.hasNext()) {
+            Unit unit1 = iterator.next();
+            index++;
             if (unit1 instanceof MovableUnit) {
-                if (((MovableUnit) unit1).getCollisionRadius() < 3) {
-                    removeIndex.add(i);
+                final MovableUnit movableUnit1 = (MovableUnit) unit1;
+                //清除碰撞半径小于3的可移动单位
+                if (movableUnit1.getCollisionRadius() < 3) {
+                    //记录被删除单位的下标索引
+                    removeIndex.add(index);
+                    iterator.remove();
                     continue;
                 }
-                final MovableUnit movableUnit1 = (MovableUnit) unit1;
-                for (int j = i + 1; j < unitList.size(); j++) {
+                //处理与其他单位的互相影响(两个单位之间只处理一次)
+                for (int j = index + 1; j < unitList.size(); j++) {
                     Unit unit2 = unitList.get(j);
                     if (unit2 instanceof MovableUnit) {
-                        if (MovableUnit.CollisionHandler.inAdvanceDetectionIntersects(movableUnit1, (MovableUnit) unit2)) {
-                            //相撞
-                            MovableUnit.CollisionHandler.handleCollision((MovableUnit) unit1, (MovableUnit) unit2);
-                        }
+                        //万有引力
+                        GravitationSimulationTool.handleGravitation(movableUnit1, (MovableUnit) unit2);
+                        //碰撞
+                        CollisionSimulationTool.handleCollision(movableUnit1, (MovableUnit) unit2);
                     }
                 }
+                //移动
                 movableUnit1.move();
             }
         }
-        for (int index : removeIndex) {
-            unitList.remove(index);
-        }
+
         frame.repaint();
         return removeIndex;
     }
@@ -173,8 +187,6 @@ public class TankWarOnlineApplication {
         this.unitList.clear();
         this.player.setId(playerId);
     }
-
-
 
     /**
      * 重置数据, 变为主机

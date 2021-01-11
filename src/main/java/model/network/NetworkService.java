@@ -1,7 +1,7 @@
 package model.network;
 
 import controller.TankWarOnlineApplication;
-import util.Constant;
+import model.Constant;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

@@ -1,7 +1,7 @@
 package model.network.tool;
 
 import model.network.dto.StateSyncMessageInfo;
-import util.Constant;
+import model.Constant;
 
 import java.io.IOException;
 import java.net.DatagramPacket;

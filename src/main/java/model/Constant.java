@@ -1,4 +1,4 @@
-package util;
+package model;
 
 /**
  * 常量类: 包括一些常量和初始值
@@ -15,10 +15,21 @@ public interface Constant {
      * 每一帧的间隔时间
      */
     int STEP_INTERVAL_TIME = 8;
-    /**
-     * 物体重叠获得加速度
-     */
-    float INTERSECTION_SPEED_UP = 0.3F;
+
+    interface Interaction {
+        /**
+         * 引力常量
+         */
+        float GRAVITATION_CONSTANT = 0.1F;
+        /**
+         * 撞击捕获常量（值越大越容易捕获）
+         */
+        float COLLISION_CAPTURE_CONSTANT = 0.1F;
+        /**
+         * 撞击伤害常量
+         */
+        float COLLISION_DAMAGE = 0.5F;
+    }
 
     interface Network {
         /**
@@ -63,11 +74,11 @@ public interface Constant {
         /**
          * 密度
          */
-        float DENSITY = 5F;
+        float DENSITY = 2F;
         /**
-         * 重量
+         * 初始质量
          */
-        float WEIGHT = (float) (DENSITY * Math.pow(COLLISION_RADIUS, 3));
+        float MASS = (float) (DENSITY * Math.pow(COLLISION_RADIUS, 3));
         /**
          * 基础转向速度
          */
@@ -79,22 +90,28 @@ public interface Constant {
         /**
          * 加速度
          */
-        float BASIC_ACCELERATED_SPEED = BASIC_TURN_SPEED / 5;
+        float BASIC_ACCELERATION = BASIC_TURN_SPEED / 5;
         /**
          * 最大加速度
          */
-        float MAX_ACCELERATED_SPEED = BASIC_ACCELERATED_SPEED * 30;
+        float MAX_ACCELERATED_SPEED = BASIC_ACCELERATION * 30;
         /**
          * 撞击后保留速度的比率
          */
         float COLLISION_DECELERATION_RATE = 0.3F;
+        /**
+         * 射击动能
+         */
+        int SHOT_KINETIC_ENERGY = (int) (100000*(DENSITY/Cannonball.DENSITY));
     }
 
     interface Cannonball {
+
         /**
          * 加速度
          */
-        float ACCELERATED_SPEED = -0.001F;
+        float BASIC_ACCELERATION = 0F;
+//        float BASIC_ACCELERATION = -0.001F;
         /**
          * 碰撞半径
          */
@@ -110,7 +127,7 @@ public interface Constant {
         /**
          * 撞击后保留速度的比率
          */
-        float COLLISION_DECELERATION_RATE = 1F;
+        float COLLISION_DECELERATION_RATE = .6F;
         /**
          * 密度
          */

@@ -8,7 +8,7 @@ import model.entity.Unit;
 import model.network.dto.StateSyncMessageInfo;
 import model.network.tool.UdpReceiver;
 import model.network.tool.UdpSender;
-import util.Constant;
+import model.Constant;
 import view.MainPanel;
 
 import java.awt.*;

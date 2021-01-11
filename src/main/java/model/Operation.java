@@ -83,7 +83,7 @@ public class Operation implements KeyListener, MouseListener {
      */
     public Cannonball handlePlayerAction(Player player) {
         if (this.back) {
-            player.retreat();
+            player.braking();
         }
         if (this.front) {
             player.advance();
@@ -105,7 +105,7 @@ public class Operation implements KeyListener, MouseListener {
 
     public static Cannonball handlePlayerAction(Player player, StateSyncMessageInfo.SlaveSendDatagram slaveSendDatagram) {
         if (slaveSendDatagram.getBack()) {
-            player.retreat();
+            player.braking();
         }
         if (slaveSendDatagram.getFront()) {
             player.advance();
@@ -194,9 +194,9 @@ public class Operation implements KeyListener, MouseListener {
     }
 
     private interface CannonballSize {
-        byte BIG = 60;
-        byte MEDIUM = 40;
-        byte SMALL = 25;
+        byte BIG = 50;
+        byte MEDIUM = 35;
+        byte SMALL = 20;
         byte NONE = 0;
     }
 
