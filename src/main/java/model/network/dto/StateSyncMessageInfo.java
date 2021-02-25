@@ -66,6 +66,11 @@ public final class StateSyncMessageInfo {
      * <code>repeated int32 deleted_unit_index_list = 2;</code>
      */
     int getDeletedUnitIndexList(int index);
+
+    /**
+     * <code>int32 version = 3;</code>
+     */
+    int getVersion();
   }
   /**
    * Protobuf type {@code HostSendDatagram}
@@ -82,6 +87,7 @@ public final class StateSyncMessageInfo {
     private HostSendDatagram() {
       unitSyncState_ = java.util.Collections.emptyList();
       deletedUnitIndexList_ = java.util.Collections.emptyList();
+      version_ = 0;
     }
 
     @java.lang.Override
@@ -138,6 +144,11 @@ public final class StateSyncMessageInfo {
               input.popLimit(limit);
               break;
             }
+            case 24: {
+
+              version_ = input.readInt32();
+              break;
+            }
             default: {
               if (!parseUnknownFieldProto3(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -176,6 +187,7 @@ public final class StateSyncMessageInfo {
               model.network.dto.StateSyncMessageInfo.HostSendDatagram.class, model.network.dto.StateSyncMessageInfo.HostSendDatagram.Builder.class);
     }
 
+    private int bitField0_;
     public static final int UNIT_SYNC_STATE_FIELD_NUMBER = 1;
     private java.util.List<model.network.dto.StateSyncMessageInfo.UnitSyncState> unitSyncState_;
     /**
@@ -246,6 +258,15 @@ public final class StateSyncMessageInfo {
     }
     private int deletedUnitIndexListMemoizedSerializedSize = -1;
 
+    public static final int VERSION_FIELD_NUMBER = 3;
+    private int version_;
+    /**
+     * <code>int32 version = 3;</code>
+     */
+    public int getVersion() {
+      return version_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -270,6 +291,9 @@ public final class StateSyncMessageInfo {
       }
       for (int i = 0; i < deletedUnitIndexList_.size(); i++) {
         output.writeInt32NoTag(deletedUnitIndexList_.get(i));
+      }
+      if (version_ != 0) {
+        output.writeInt32(3, version_);
       }
       unknownFields.writeTo(output);
     }
@@ -298,6 +322,10 @@ public final class StateSyncMessageInfo {
         }
         deletedUnitIndexListMemoizedSerializedSize = dataSize;
       }
+      if (version_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(3, version_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -318,6 +346,8 @@ public final class StateSyncMessageInfo {
           .equals(other.getUnitSyncStateList());
       result = result && getDeletedUnitIndexListList()
           .equals(other.getDeletedUnitIndexListList());
+      result = result && (getVersion()
+          == other.getVersion());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -337,6 +367,8 @@ public final class StateSyncMessageInfo {
         hash = (37 * hash) + DELETED_UNIT_INDEX_LIST_FIELD_NUMBER;
         hash = (53 * hash) + getDeletedUnitIndexListList().hashCode();
       }
+      hash = (37 * hash) + VERSION_FIELD_NUMBER;
+      hash = (53 * hash) + getVersion();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -479,6 +511,8 @@ public final class StateSyncMessageInfo {
         }
         deletedUnitIndexList_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
+        version_ = 0;
+
         return this;
       }
 
@@ -506,6 +540,7 @@ public final class StateSyncMessageInfo {
       public model.network.dto.StateSyncMessageInfo.HostSendDatagram buildPartial() {
         model.network.dto.StateSyncMessageInfo.HostSendDatagram result = new model.network.dto.StateSyncMessageInfo.HostSendDatagram(this);
         int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
         if (unitSyncStateBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001)) {
             unitSyncState_ = java.util.Collections.unmodifiableList(unitSyncState_);
@@ -520,6 +555,8 @@ public final class StateSyncMessageInfo {
           bitField0_ = (bitField0_ & ~0x00000002);
         }
         result.deletedUnitIndexList_ = deletedUnitIndexList_;
+        result.version_ = version_;
+        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -603,6 +640,9 @@ public final class StateSyncMessageInfo {
             deletedUnitIndexList_.addAll(other.deletedUnitIndexList_);
           }
           onChanged();
+        }
+        if (other.getVersion() != 0) {
+          setVersion(other.getVersion());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -967,6 +1007,32 @@ public final class StateSyncMessageInfo {
         onChanged();
         return this;
       }
+
+      private int version_ ;
+      /**
+       * <code>int32 version = 3;</code>
+       */
+      public int getVersion() {
+        return version_;
+      }
+      /**
+       * <code>int32 version = 3;</code>
+       */
+      public Builder setVersion(int value) {
+        
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 version = 3;</code>
+       */
+      public Builder clearVersion() {
+        
+        version_ = 0;
+        onChanged();
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1048,6 +1114,11 @@ public final class StateSyncMessageInfo {
      * <code>int32 cannonball_size = 5;</code>
      */
     int getCannonballSize();
+
+    /**
+     * <code>int32 version = 6;</code>
+     */
+    int getVersion();
   }
   /**
    * Protobuf type {@code SlaveSendDatagram}
@@ -1067,6 +1138,7 @@ public final class StateSyncMessageInfo {
       left_ = false;
       right_ = false;
       cannonballSize_ = 0;
+      version_ = 0;
     }
 
     @java.lang.Override
@@ -1116,6 +1188,11 @@ public final class StateSyncMessageInfo {
             case 40: {
 
               cannonballSize_ = input.readInt32();
+              break;
+            }
+            case 48: {
+
+              version_ = input.readInt32();
               break;
             }
             default: {
@@ -1195,6 +1272,15 @@ public final class StateSyncMessageInfo {
       return cannonballSize_;
     }
 
+    public static final int VERSION_FIELD_NUMBER = 6;
+    private int version_;
+    /**
+     * <code>int32 version = 6;</code>
+     */
+    public int getVersion() {
+      return version_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1223,6 +1309,9 @@ public final class StateSyncMessageInfo {
       }
       if (cannonballSize_ != 0) {
         output.writeInt32(5, cannonballSize_);
+      }
+      if (version_ != 0) {
+        output.writeInt32(6, version_);
       }
       unknownFields.writeTo(output);
     }
@@ -1253,6 +1342,10 @@ public final class StateSyncMessageInfo {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, cannonballSize_);
       }
+      if (version_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(6, version_);
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -1279,6 +1372,8 @@ public final class StateSyncMessageInfo {
           == other.getRight());
       result = result && (getCannonballSize()
           == other.getCannonballSize());
+      result = result && (getVersion()
+          == other.getVersion());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -1304,6 +1399,8 @@ public final class StateSyncMessageInfo {
           getRight());
       hash = (37 * hash) + CANNONBALL_SIZE_FIELD_NUMBER;
       hash = (53 * hash) + getCannonballSize();
+      hash = (37 * hash) + VERSION_FIELD_NUMBER;
+      hash = (53 * hash) + getVersion();
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -1447,6 +1544,8 @@ public final class StateSyncMessageInfo {
 
         cannonballSize_ = 0;
 
+        version_ = 0;
+
         return this;
       }
 
@@ -1478,6 +1577,7 @@ public final class StateSyncMessageInfo {
         result.left_ = left_;
         result.right_ = right_;
         result.cannonballSize_ = cannonballSize_;
+        result.version_ = version_;
         onBuilt();
         return result;
       }
@@ -1540,6 +1640,9 @@ public final class StateSyncMessageInfo {
         }
         if (other.getCannonballSize() != 0) {
           setCannonballSize(other.getCannonballSize());
+        }
+        if (other.getVersion() != 0) {
+          setVersion(other.getVersion());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -1696,6 +1799,32 @@ public final class StateSyncMessageInfo {
       public Builder clearCannonballSize() {
         
         cannonballSize_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int version_ ;
+      /**
+       * <code>int32 version = 6;</code>
+       */
+      public int getVersion() {
+        return version_;
+      }
+      /**
+       * <code>int32 version = 6;</code>
+       */
+      public Builder setVersion(int value) {
+        
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 version = 6;</code>
+       */
+      public Builder clearVersion() {
+        
+        version_ = 0;
         onChanged();
         return this;
       }
@@ -3512,18 +3641,19 @@ public final class StateSyncMessageInfo {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\026StateSyncMessage.proto\"\\\n\020HostSendData" +
+      "\n\026StateSyncMessage.proto\"m\n\020HostSendData" +
       "gram\022\'\n\017unit_sync_state\030\001 \003(\0132\016.UnitSync" +
-      "State\022\037\n\027deleted_unit_index_list\030\002 \003(\005\"f" +
-      "\n\021SlaveSendDatagram\022\r\n\005front\030\001 \001(\010\022\014\n\004ba" +
-      "ck\030\002 \001(\010\022\014\n\004left\030\003 \001(\010\022\r\n\005right\030\004 \001(\010\022\027\n" +
-      "\017cannonball_size\030\005 \001(\005\"\224\001\n\rUnitSyncState" +
-      "\022\033\n\010position\030\001 \001(\0132\t.Position\022\021\n\tdirecti" +
-      "on\030\002 \001(\002\022\r\n\005speed\030\003 \001(\002\022\030\n\020collision_rad" +
-      "ius\030\004 \001(\002\022\014\n\004type\030\005 \001(\t\022\n\n\002id\030\006 \001(\t\022\020\n\010h" +
-      "ero_idx\030\007 \001(\005\" \n\010Position\022\t\n\001x\030\001 \001(\002\022\t\n\001" +
-      "y\030\002 \001(\002B+\n\021model.network.dtoB\024StateSyncM" +
-      "essageInfoH\001b\006proto3"
+      "State\022\037\n\027deleted_unit_index_list\030\002 \003(\005\022\017" +
+      "\n\007version\030\003 \001(\005\"w\n\021SlaveSendDatagram\022\r\n\005" +
+      "front\030\001 \001(\010\022\014\n\004back\030\002 \001(\010\022\014\n\004left\030\003 \001(\010\022" +
+      "\r\n\005right\030\004 \001(\010\022\027\n\017cannonball_size\030\005 \001(\005\022" +
+      "\017\n\007version\030\006 \001(\005\"\224\001\n\rUnitSyncState\022\033\n\010po" +
+      "sition\030\001 \001(\0132\t.Position\022\021\n\tdirection\030\002 \001" +
+      "(\002\022\r\n\005speed\030\003 \001(\002\022\030\n\020collision_radius\030\004 " +
+      "\001(\002\022\014\n\004type\030\005 \001(\t\022\n\n\002id\030\006 \001(\t\022\020\n\010hero_id" +
+      "x\030\007 \001(\005\" \n\010Position\022\t\n\001x\030\001 \001(\002\022\t\n\001y\030\002 \001(" +
+      "\002B+\n\021model.network.dtoB\024StateSyncMessage" +
+      "InfoH\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3542,13 +3672,13 @@ public final class StateSyncMessageInfo {
     internal_static_HostSendDatagram_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_HostSendDatagram_descriptor,
-        new java.lang.String[] { "UnitSyncState", "DeletedUnitIndexList", });
+        new java.lang.String[] { "UnitSyncState", "DeletedUnitIndexList", "Version", });
     internal_static_SlaveSendDatagram_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_SlaveSendDatagram_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SlaveSendDatagram_descriptor,
-        new java.lang.String[] { "Front", "Back", "Left", "Right", "CannonballSize", });
+        new java.lang.String[] { "Front", "Back", "Left", "Right", "CannonballSize", "Version", });
     internal_static_UnitSyncState_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_UnitSyncState_fieldAccessorTable = new

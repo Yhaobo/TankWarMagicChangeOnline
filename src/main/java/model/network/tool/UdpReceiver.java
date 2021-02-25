@@ -4,10 +4,7 @@ import model.network.dto.StateSyncMessageInfo;
 import model.Constant;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.SocketException;
+import java.net.*;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,7 +19,7 @@ public class UdpReceiver {
     /**
      * UDP数据包的长度
      */
-    protected AtomicInteger datagramPacketLen = new AtomicInteger(Constant.Network.ETHERNET_MTU);
+    protected AtomicInteger datagramPacketLen = new AtomicInteger(Constant.NetworkConstant.ETHERNET_MTU);
 
     public UdpReceiver(int port) {
         try {
@@ -32,20 +29,12 @@ public class UdpReceiver {
         }
     }
 
-    public UdpReceiver(InetAddress multicastAddress) {
-        try {
-            socket = new MulticastSocket(Constant.Network.DATA_LISTEN_PORT);
-            socket.joinGroup(multicastAddress);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * 扩容
      */
     private void dilatation() {
-        datagramPacketLen.addAndGet(Constant.Network.ETHERNET_MTU);
+        datagramPacketLen.addAndGet(Constant.NetworkConstant.ETHERNET_MTU);
         System.out.println("datagramPacketLen："+datagramPacketLen);
     }
 
@@ -83,8 +72,12 @@ public class UdpReceiver {
      *
      * @param address 组播地址
      */
-    public void joinGroup(InetAddress address) throws IOException {
-        socket.joinGroup(address);
+    public void joinGroup(InetAddress address, NetworkInterface networkInterface) throws IOException {
+        if (networkInterface == null) {
+            System.out.println("joinGroup方法的参数 NetworkInterface 为 null !!!");
+            System.exit(0);
+        }
+        socket.joinGroup(new InetSocketAddress(address,Constant.NetworkConstant.DATA_LISTEN_PORT),networkInterface);
     }
 
     /**

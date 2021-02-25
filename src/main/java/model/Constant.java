@@ -16,11 +16,17 @@ public interface Constant {
      */
     int STEP_INTERVAL_TIME = 8;
 
-    interface Interaction {
+    interface BlackHole {
+        /**
+         * 密度
+         */
+        float DENSITY = 3000;
+    }
+    interface InteractionConstant {
         /**
          * 引力常量
          */
-        float GRAVITATION_CONSTANT = 0.1F;
+        float GRAVITATION_CONSTANT = 0.0005F;
         /**
          * 撞击捕获常量（值越大越容易捕获）
          */
@@ -28,10 +34,10 @@ public interface Constant {
         /**
          * 撞击伤害常量
          */
-        float COLLISION_DAMAGE = 0.5F;
+        int COLLISION_DAMAGE = 1000;
     }
 
-    interface Network {
+    interface NetworkConstant {
         /**
          * 默认数据监听端口
          */
@@ -58,11 +64,18 @@ public interface Constant {
         int UDP_MTU = 65507;
     }
 
-    interface Tank {
+    interface UnitConstant {
+        /**
+         * 碰撞半径小于此数值的单位将被移除
+         */
+        int ANNIHILATION_RADIUS = 3;
+    }
+
+    interface TankConstant {
         /**
          * 碰撞半径
          */
-        float COLLISION_RADIUS = 50;
+        float COLLISION_RADIUS = 40;
         /**
          * 宽
          */
@@ -74,7 +87,7 @@ public interface Constant {
         /**
          * 密度
          */
-        float DENSITY = 2F;
+        float DENSITY = 5F;
         /**
          * 初始质量
          */
@@ -102,28 +115,16 @@ public interface Constant {
         /**
          * 射击动能
          */
-        int SHOT_KINETIC_ENERGY = (int) (100000*(DENSITY/Cannonball.DENSITY));
+        int SHOT_KINETIC_ENERGY = (int) (100000 * (DENSITY / CannonballConstant.DENSITY));
     }
 
-    interface Cannonball {
+    interface CannonballConstant {
 
         /**
          * 加速度
          */
         float BASIC_ACCELERATION = 0F;
 //        float BASIC_ACCELERATION = -0.001F;
-        /**
-         * 碰撞半径
-         */
-        float COLLISION_RADIUS = 20;
-        /**
-         * 宽
-         */
-        int WIDTH = Math.round(COLLISION_RADIUS * 2);
-        /**
-         * 高
-         */
-        int HEIGHT = Math.round(COLLISION_RADIUS * 2);
         /**
          * 撞击后保留速度的比率
          */

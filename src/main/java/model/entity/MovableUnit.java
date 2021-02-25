@@ -10,7 +10,7 @@ import java.awt.image.BufferedImage;
  * @date 2020/10/27
  */
 
-public abstract class MovableUnit extends Unit {
+public abstract class MovableUnit extends CollisionableUnit {
 
     /**
      * 方向 (弧度)
@@ -21,72 +21,25 @@ public abstract class MovableUnit extends Unit {
      */
     protected float speed;
     /**
-     * 碰撞半径
-     */
-    protected float collisionRadius;
-    /**
      * 碰撞后保留速度的比率
      */
     protected float collisionDecelerationRate;
-    /**
-     * 密度
-     */
-    protected float density;
-    /**
-     * 质量
-     */
-    private float mass;
 
     public MovableUnit() {
     }
 
-    public MovableUnit(BufferedImage img, Position position, int width, int height, float collisionRadius, float collisionDecelerationRate, float density) {
-        this(position, width, height, collisionRadius, collisionDecelerationRate, density);
+    public MovableUnit(BufferedImage img, Position position, float collisionRadius, float collisionDecelerationRate, float density) {
+        this(position, collisionRadius, collisionDecelerationRate, density);
         setImgAndTempImg(img);
     }
 
-    public MovableUnit(Position position, int width, int height, float collisionRadius, float collisionDecelerationRate, float density) {
-        super.width = width;
-        super.height = height;
-        this.collisionRadius = collisionRadius;
+    public MovableUnit(Position position, float collisionRadius, float collisionDecelerationRate, float density) {
+        super(position,collisionRadius,density);
         this.collisionDecelerationRate = collisionDecelerationRate;
-        this.density = density;
         this.direction = (float) (Math.PI * 2 * Math.random());
-        setPositionAndVerify(position);
-        computeAndSetMass();
+
     }
 
-    private void computeAndSetMass() {
-        this.mass = (float) (density * Math.pow(collisionRadius, 3));
-    }
-
-    /**
-     * 变化质量, 同时变化碰撞半径和显示大小
-     *
-     * @param variation 变化量
-     */
-    public void changeMass(float variation) {
-        this.mass += variation;
-        this.collisionRadius = (float) Math.pow(this.mass / this.density, 1.0 / 3);
-        this.width = Math.round(this.collisionRadius * 2);
-        this.height = Math.round(this.collisionRadius * 2);
-    }
-
-    /**
-     * 设置碰撞半径, 同时设置显示大小以及质量
-     *
-     * @param radius
-     */
-    public void setCollisionRadius(float radius) {
-        this.collisionRadius = radius;
-        this.width = Math.round(radius * 2);
-        this.height = Math.round(radius * 2);
-        computeAndSetMass();
-    }
-
-    public Position getCentrePosition(Position position) {
-        return new Position(position.getX() + (width >> 1), position.getY() + (height >> 1));
-    }
 
 
     public void setImgAndTempImg(BufferedImage img) {
@@ -163,29 +116,14 @@ public abstract class MovableUnit extends Unit {
      */
     public abstract void move();
 
+    /**
+     * 碰撞减速
+     */
     protected void collisionDeceleration() {
         this.speed *= collisionDecelerationRate;
     }
 
-    /**
-     * 返回单位的碰撞半径
-     *
-     * @return 碰撞半径
-     */
-    public float getCollisionRadius() {
-        return collisionRadius;
-    }
 
-
-
-    /**
-     * 返回单位的中心点定位
-     *
-     * @return 中心定位
-     */
-    public Position getCentrePosition() {
-        return getCentrePosition(position);
-    }
 
     public float getDirection() {
         return direction;
@@ -209,26 +147,6 @@ public abstract class MovableUnit extends Unit {
 
     public void setCollisionDecelerationRate(float collisionDecelerationRate) {
         this.collisionDecelerationRate = collisionDecelerationRate;
-    }
-
-    public float getDensity() {
-        return density;
-    }
-
-    public void setDensity(float density) {
-        this.density = density;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public float getMass() {
-        return mass;
     }
 
     @Override

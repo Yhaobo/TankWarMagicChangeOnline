@@ -52,6 +52,13 @@ public class Vector2d {
         return this;
     }
 
+    /**
+     * @return 返回零向量
+     */
+    public static Vector2d zeroVector() {
+        return new Vector2d(0, 0);
+    }
+
     public boolean isZero() {
         return x == 0 && y == 0;
     }
@@ -126,7 +133,6 @@ public class Vector2d {
     public Vector2d divide(double value) {
         return new Vector2d(x / value, y / value);
     }
-
 
     @Override
     public String toString() {

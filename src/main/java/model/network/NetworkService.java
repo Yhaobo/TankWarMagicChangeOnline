@@ -4,12 +4,9 @@ import controller.TankWarOnlineApplication;
 import model.Constant;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketTimeoutException;
-import java.util.HashSet;
-import java.util.Set;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * @author Yhaobo
@@ -17,9 +14,15 @@ import java.util.Set;
  */
 public class NetworkService {
     /**
+     * 数据包同步版本号
+     */
+    protected int version;
+    /**
      * 主机地址列表(房间列表)
      */
-    private Set<InetAddress> hostAddressList = new HashSet<>();
+    private final Set<InetAddress> hostAddressList = new HashSet<>();
+
+    public static final Map<InetAddress, NetworkInterface> AVAILABLE_INET_ADDRESS_NETWORK_INTERFACE_MAP = findAvailableInetAddress();
 
     public NetworkService() {
     }
@@ -31,22 +34,44 @@ public class NetworkService {
     /**
      * 通过udp广播来寻找主机
      */
-    public Set<InetAddress> discoverHost() {
+    public Set<InetAddress> discoverHost() throws SocketException, UnknownHostException {
+        hostAddressList.clear();
+
+        final byte[] bytes = ConnectConst.FIND_FLAG.getBytes();
+        DatagramPacket packet = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(Constant.NetworkConstant.BROADCAST_ADDRESS_NAME), Constant.NetworkConstant.CONNECT_LISTEN_PORT);
+
+        Map<InetAddress, NetworkInterface> availableInetAddress = findAvailableInetAddress();
+        CountDownLatch countDownLatch = new CountDownLatch(availableInetAddress.size());
+
+        for (InetAddress inetAddress : availableInetAddress.keySet()) {
+            TankWarOnlineApplication.SCHEDULED_THREAD_POOL.execute(() -> {
+                DatagramSocket socket = null;
+                try {
+                    socket = new DatagramSocket(0, inetAddress);
+                    socket.send(packet);
+                    for (; ; ) {
+                        socket.setSoTimeout(Constant.STEP_INTERVAL_TIME * 10);
+                        socket.receive(packet);
+
+                        hostAddressList.add(packet.getAddress());
+                        System.out.println("发现的主机：" + packet.getAddress());
+                    }
+                } catch (SocketTimeoutException e) {
+                    System.out.println("寻找主机超时结束 - " + inetAddress);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    countDownLatch.countDown();
+                    if (socket != null) {
+                        socket.close();
+                    }
+                }
+            });
+        }
+
         try {
-            hostAddressList.clear();
-            final byte[] bytes = ConnectConst.FIND_FLAG.getBytes();
-            DatagramSocket socket = new DatagramSocket();
-            DatagramPacket packet = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(Constant.Network.BROADCAST_ADDRESS_NAME), Constant.Network.CONNECT_LISTEN_PORT);
-            socket.send(packet);
-            for (; ; ) {
-                socket.setSoTimeout(Constant.STEP_INTERVAL_TIME*10);
-                socket.receive(packet);
-                final InetAddress inetAddress =packet.getAddress();
-                TankWarOnlineApplication.SCHEDULED_THREAD_POOL.execute(() -> hostAddressList.add(inetAddress));
-            }
-        } catch (SocketTimeoutException e) {
-            System.out.println("寻找主机超时结束");
-        } catch (IOException e) {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
         return hostAddressList;
@@ -62,5 +87,43 @@ public class NetworkService {
         String OK_FLAG = "ok";
     }
 
+    /**
+     * 获取本机所有网络接口中可用的IP地址及其网络接口（不是虚拟网络接口且以192.或172.或10.开头的IP地址）
+     */
+    private static Map<InetAddress, NetworkInterface> findAvailableInetAddress() {
+        Map<InetAddress, NetworkInterface> availableInetAddress = new HashMap<>();
+        try {
+            Enumeration<NetworkInterface> networkInterfaces = NetworkInterface.getNetworkInterfaces();
+            while (networkInterfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = networkInterfaces.nextElement();
+                //忽略回环接口，子接口，未运行接口
+                if (networkInterface.isVirtual() || !networkInterface.isUp() || networkInterface.isLoopback()) {
+                    continue;
+                }
+                System.out.print("发现网络接口：" + networkInterface.getName());
+                System.out.println(" - " + networkInterface.getDisplayName());
+                //忽略虚拟网络接口
+                if (networkInterface.getDisplayName().contains("Virtual")) {
+                    continue;
+                }
+                Enumeration<InetAddress> inetAddresses = networkInterface.getInetAddresses();
+                while (inetAddresses.hasMoreElements()) {
+                    InetAddress inetAddress = inetAddresses.nextElement();
+                    if (inetAddress.isSiteLocalAddress()) {
+                        String hostAddress = inetAddress.getHostAddress();
+                        if (hostAddress.startsWith("192.") || hostAddress.startsWith("172.") || hostAddress.startsWith("10.")) {
+                            availableInetAddress.put(inetAddress, networkInterface);
+                        }
+                    }
 
+                }
+            }
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        for (NetworkInterface value : availableInetAddress.values()) {
+            System.out.println("选择的网络接口：" + value.getName());
+        }
+        return availableInetAddress;
+    }
 }

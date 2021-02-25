@@ -30,9 +30,11 @@ public class Operation implements KeyListener, MouseListener {
         switch (e.getKeyCode()) {
             case KeyEvent.VK_W:
                 this.front = true;
+                this.back = false;
                 break;
             case KeyEvent.VK_S:
                 this.back = true;
+                this.front = false;
                 break;
             case KeyEvent.VK_A:
                 this.left = true;
@@ -81,7 +83,7 @@ public class Operation implements KeyListener, MouseListener {
      * @param player 当前玩家
      * @return null 没有射击；Cannonball的实例 射击
      */
-    public Cannonball handlePlayerAction(Player player) {
+    public Cannonball applyPlayerAction(Player player) {
         if (this.back) {
             player.braking();
         }
@@ -103,7 +105,7 @@ public class Operation implements KeyListener, MouseListener {
         return null;
     }
 
-    public static Cannonball handlePlayerAction(Player player, StateSyncMessageInfo.SlaveSendDatagram slaveSendDatagram) {
+    public static Cannonball applyPlayerAction(Player player, StateSyncMessageInfo.SlaveSendDatagram slaveSendDatagram) {
         if (slaveSendDatagram.getBack()) {
             player.braking();
         }

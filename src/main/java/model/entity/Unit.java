@@ -1,11 +1,13 @@
 package model.entity;
 
+import model.Constant;
 import model.Position;
 import view.MainPanel;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -33,6 +35,23 @@ public abstract class Unit implements Identification {
      */
     protected int height;
     protected String id = UUID.randomUUID().toString().replace("-", "");
+
+    public Unit() {
+    }
+
+    public Unit(Position position, int width, int height) {
+        setPositionAndVerify(position);
+        this.width = width;
+        this.height = height;
+    }
+
+    /**
+     * @return 返回一个随机定位
+     */
+    public static Position randomPosition() {
+        final Random random = new Random();
+        return new Position(random.nextInt((int) MainPanel.getDimension().getWidth() - Constant.TankConstant.WIDTH), random.nextInt((int) MainPanel.getDimension().getHeight() - Constant.TankConstant.HEIGHT));
+    }
 
     /**
      * 返回单位的定位
@@ -77,14 +96,24 @@ public abstract class Unit implements Identification {
 
         return this;
     }
-
+    public Position getCentrePosition(Position position) {
+        return new Position(position.getX() + (width >> 1), position.getY() + (height >> 1));
+    }
+    /**
+     * 返回单位的中心点定位
+     *
+     * @return 中心定位
+     */
+    public Position getCentrePosition() {
+        return getCentrePosition(position);
+    }
     /**
      * 绘制
      *
      * @param g 画布
      */
     public void draw(Graphics g) {
-        g.drawImage(img, Math.round(position.getX()), Math.round(position.getY()), img.getWidth(), img.getHeight(), null);
+        g.drawImage(img, Math.round(position.getX()), Math.round(position.getY()), width, height, null);
     }
 
     /**
@@ -110,4 +139,11 @@ public abstract class Unit implements Identification {
         return Objects.hash(id);
     }
 
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
 }

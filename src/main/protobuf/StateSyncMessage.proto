@@ -8,6 +8,8 @@ message HostSendDatagram{
 
   //在{@link TankWarOnlineApplication#unitList}中被删除单位的索引数组(每次同步都会重置)
   repeated int32 deleted_unit_index_list = 2;
+
+  int32 version=3;
 }
 
 message SlaveSendDatagram{
@@ -15,8 +17,9 @@ message SlaveSendDatagram{
   bool back = 2;
   bool left = 3;
   bool right = 4;
-
   int32 cannonball_size = 5;
+
+  int32 version=6;
 }
 
 //单位要同步的状态

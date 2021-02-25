@@ -1,20 +1,16 @@
 package controller;
 
+import model.Constant;
 import model.Operation;
-import model.entity.Cannonball;
-import model.entity.MovableUnit;
-import model.entity.Player;
-import model.entity.Unit;
+import model.entity.*;
 import model.interaction.CollisionSimulationTool;
 import model.interaction.GravitationSimulationTool;
 import model.network.HostNetworkService;
 import model.network.NetworkService;
 import model.network.SlaveNetworkService;
-import model.Constant;
 import view.MainFrame;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -22,14 +18,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- *
  * @author Yhaobo
  * @date 2020/10/25
  */
 public class TankWarOnlineApplication {
     private final List<Unit> unitList = new ArrayList<>();
 
-    private Player player = Player.newPlayer();
+    private Player player;
 
     /**
      * 联机服务
@@ -47,7 +42,8 @@ public class TankWarOnlineApplication {
 
     public static final ScheduledExecutorService SCHEDULED_THREAD_POOL = new ScheduledThreadPoolExecutor(Math.max(1, Runtime.getRuntime().availableProcessors()), new ThreadPoolExecutor.CallerRunsPolicy());
 
-    public TankWarOnlineApplication() {
+    private void generatePlayer() {
+        player = Player.newPlayer();
         unitList.add(player);
     }
 
@@ -67,6 +63,8 @@ public class TankWarOnlineApplication {
 
     public static void main(String[] args) throws InterruptedException {
         final TankWarOnlineApplication tankWarOnlineApplication = new TankWarOnlineApplication();
+        tankWarOnlineApplication.generateBlackHole();
+        tankWarOnlineApplication.generatePlayer();
         tankWarOnlineApplication.start();
     }
 
@@ -96,9 +94,11 @@ public class TankWarOnlineApplication {
     private void startSlaveMode() throws InterruptedException {
         TimeUnit.MILLISECONDS.sleep(Constant.STEP_INTERVAL_TIME);
         final SlaveNetworkService networkService = (SlaveNetworkService) this.networkService;
+
+        System.out.println("开始从机模式");
         for (; ; ) {
+            networkService.acceptData(this);
             networkService.sendOperation(operation);
-            networkService.acceptData(unitList);
             frame.repaint();
         }
     }
@@ -109,23 +109,25 @@ public class TankWarOnlineApplication {
     private void startHostMode() throws InterruptedException {
         TimeUnit.MILLISECONDS.sleep(Constant.STEP_INTERVAL_TIME);
         final HostNetworkService networkService = (HostNetworkService) this.networkService;
-        long start;
-        long end;
+        long startTime;
         List<Integer> removeUnitIndex;
-        long timeout;
-        for (; ; ) {
-            start = System.currentTimeMillis();
+        long spendTime;
+        System.out.println("开始主机模式");
 
-            networkService.acceptAndHandleOperation(unitList);
+        for (; ; ) {
+            startTime = System.currentTimeMillis();
+
+            networkService.acceptAndHandleOperation(unitList, Constant.STEP_INTERVAL_TIME);
             removeUnitIndex = step();
             networkService.sendData(unitList, removeUnitIndex);
-
-            end = System.currentTimeMillis();
-            timeout = Constant.STEP_INTERVAL_TIME - (end - start);
-            if (timeout > 0) {
-                TimeUnit.MILLISECONDS.sleep(timeout);
+            //从后往前删除被标记的单位
+            for (int i = removeUnitIndex.size() - 1; i >= 0; i--) {
+                unitList.remove((int) removeUnitIndex.get(i));
             }
-
+            spendTime = System.currentTimeMillis() - startTime;
+            if (spendTime < Constant.STEP_INTERVAL_TIME) {
+                TimeUnit.MILLISECONDS.sleep(Constant.STEP_INTERVAL_TIME - spendTime);
+            }
         }
     }
 
@@ -136,39 +138,38 @@ public class TankWarOnlineApplication {
      */
     private List<Integer> step() {
         //处理玩家操作
-        final Cannonball cannonball = operation.handlePlayerAction(this.player);
+        final Cannonball cannonball = operation.applyPlayerAction(this.player);
         if (cannonball != null) {
             unitList.add(cannonball);
         }
         //声明 被删除单位的下标索引集合
         List<Integer> removeIndex = new ArrayList<>(unitList.size() >> 1);
         //遍历所有单位
-        Iterator<Unit> iterator = unitList.iterator();
-        int index = -1;
-        while (iterator.hasNext()) {
-            Unit unit1 = iterator.next();
-            index++;
-            if (unit1 instanceof MovableUnit) {
-                final MovableUnit movableUnit1 = (MovableUnit) unit1;
-                //清除碰撞半径小于3的可移动单位
-                if (movableUnit1.getCollisionRadius() < 3) {
+        for (int index = 0; index < unitList.size(); index++) {
+            Unit unit1 = unitList.get(index);
+            //处理可碰撞单位
+            if (unit1 instanceof CollisionableUnit) {
+                final CollisionableUnit collisionableUnit1 = (CollisionableUnit) unit1;
+                //标记质量小于等于0的单位
+                if (collisionableUnit1.getMass() <= 0) {
                     //记录被删除单位的下标索引
                     removeIndex.add(index);
-                    iterator.remove();
                     continue;
                 }
-                //处理与其他单位的互相影响(两个单位之间只处理一次)
+                //处理与其他可碰撞单位的互相影响(两个单位之间只处理一次)
                 for (int j = index + 1; j < unitList.size(); j++) {
                     Unit unit2 = unitList.get(j);
-                    if (unit2 instanceof MovableUnit) {
+                    if (unit2 instanceof CollisionableUnit) {
                         //万有引力
-                        GravitationSimulationTool.handleGravitation(movableUnit1, (MovableUnit) unit2);
+                        GravitationSimulationTool.handleGravitation(collisionableUnit1, (CollisionableUnit) unit2);
                         //碰撞
-                        CollisionSimulationTool.handleCollision(movableUnit1, (MovableUnit) unit2);
+                        CollisionSimulationTool.handleCollision(collisionableUnit1, (CollisionableUnit) unit2);
                     }
                 }
                 //移动
-                movableUnit1.move();
+                if (unit1 instanceof MovableUnit) {
+                    ((MovableUnit) collisionableUnit1).move();
+                }
             }
         }
 
@@ -185,6 +186,10 @@ public class TankWarOnlineApplication {
         Thread.sleep(Constant.STEP_INTERVAL_TIME);
 
         this.unitList.clear();
+
+        //密度值置零表示此player待替换
+        this.player.setDensity(0);
+        //此id用于从主机传来的数据中找到对应的player，然后赋值给 controller.TankWarOnlineApplication.player
         this.player.setId(playerId);
     }
 
@@ -196,7 +201,28 @@ public class TankWarOnlineApplication {
         this.appStatus = AppStatus.HOST;
         Thread.sleep(Constant.STEP_INTERVAL_TIME);
 
-        unitList.removeIf(unit -> !(unit instanceof Player));
+        unitList.clear();
+        generatePlayer();
+        generateBlackHole();
+    }
+
+    /**
+     * 生成黑洞
+     */
+    private void generateBlackHole() {
+        int blackHoleTotal;
+        double random = Math.random();
+        if (random <= 0.7) {
+            blackHoleTotal = 1;
+        } else if (random < .99) {
+            blackHoleTotal = 2;
+        } else {
+            blackHoleTotal = 3;
+        }
+        for (int i = 0; i < blackHoleTotal; i++) {
+            BlackHole blackHole = new BlackHole(BlackHole.randomPosition(), Math.round(Math.random() * 10 + 5), Constant.BlackHole.DENSITY);
+            unitList.add(blackHole);
+        }
     }
 
     public NetworkService getNetworkService() {
@@ -213,5 +239,9 @@ public class TankWarOnlineApplication {
 
     public List<Unit> getUnitList() {
         return unitList;
+    }
+
+    public void setPlayer(Player player) {
+        this.player = player;
     }
 }

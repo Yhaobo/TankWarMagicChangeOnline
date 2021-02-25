@@ -1,8 +1,6 @@
 package model.entity;
 
-import model.Position;
 import model.Constant;
-import view.MainPanel;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -12,7 +10,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 /**
  * 玩家控制单位
@@ -29,6 +26,11 @@ public class Player extends Tank {
     private BufferedImage img;
 
     /**
+     * 保护模式：未开始操作则不会移动
+     */
+    private boolean protectMode = true;
+
+    /**
      * 玩家名, 默认为本地主机域名
      */
     private String name;
@@ -41,18 +43,21 @@ public class Player extends Tank {
 
     /**
      * 创建可使用的Player
-     *
-     * @param manual 非反序列化创建
      */
-    public Player(InetAddress inetAddress) {
+    public Player(String name) {
         super(randomPosition());
         randomAndSetImg();
-        name = inetAddress.getHostName();
+        this.name = name;
     }
 
+    /**
+     * 快速创建（玩家名为本机域名）
+     *
+     * @return
+     */
     public static Player newPlayer() {
         try {
-            return new Player(InetAddress.getLocalHost());
+            return new Player(InetAddress.getLocalHost().getHostName());
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
@@ -80,19 +85,14 @@ public class Player extends Tank {
         }
     }
 
-    public static Position randomPosition() {
-        final Random random = new Random();
-        return new Position(random.nextInt((int) MainPanel.getDimension().getWidth() - Constant.Tank.WIDTH), random.nextInt((int) MainPanel.getDimension().getHeight() - Constant.Tank.HEIGHT));
-    }
-
     @Override
     public void renew() {
         try {
             this.img = ImageIO.read(Player.class.getResourceAsStream("/hero" + heroIdx + ".png"));
             super.setImgAndTempImg(this.img);
-            super.setDensity(Constant.Tank.DENSITY);
+            super.setDensity(Constant.TankConstant.DENSITY);
             super.setCollisionRadius(collisionRadius);
-            super.collisionDecelerationRate = Constant.Tank.COLLISION_DECELERATION_RATE;
+            super.collisionDecelerationRate = Constant.TankConstant.COLLISION_DECELERATION_RATE;
             this.name = InetAddress.getLocalHost().getCanonicalHostName();
         } catch (IOException e) {
             e.printStackTrace();
@@ -104,7 +104,7 @@ public class Player extends Tank {
         g.setFont(new Font("宋体", Font.BOLD, 20));
         g.drawString(name, Math.round(this.position.getX()), Math.round(this.position.getY() - 35));
         g.drawRect(Math.round(this.position.getX()), Math.round(this.position.getY() - 30), this.getWidth(), 10);
-        g.fillRect(Math.round(this.position.getX()), Math.round(this.position.getY() - 30), Math.round(this.getWidth() * (getMass() / Constant.Tank.MASS)), 10);
+        g.fillRect(Math.round(this.position.getX()), Math.round(this.position.getY() - 30), Math.round(this.getWidth() * (getMass() / Constant.TankConstant.MASS)), 10);
         super.draw(g);
     }
 
@@ -142,6 +142,39 @@ public class Player extends Tank {
 
     public void setId(String playerId) {
         this.id = playerId;
+    }
+
+    @Override
+    public void turn(boolean isRightTurn) {
+        this.protectMode = false;
+        super.turn(isRightTurn);
+    }
+
+    @Override
+    public void advance() {
+        this.protectMode = false;
+        super.advance();
+    }
+
+    @Override
+    public void braking() {
+        this.protectMode = false;
+        super.braking();
+    }
+
+    @Override
+    public Cannonball shot(float radius) {
+        this.protectMode = false;
+        return super.shot(radius);
+    }
+
+    @Override
+    public void setSpeed(float speed) {
+        if (protectMode) {
+            super.setSpeed(0);
+        } else {
+            super.setSpeed(speed);
+        }
     }
 
 }

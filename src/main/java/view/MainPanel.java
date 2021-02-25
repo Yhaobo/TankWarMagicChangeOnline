@@ -61,5 +61,10 @@ public class MainPanel extends JPanel {
             }
             player.draw(g);
         }
+        if (application.getPlayer()!=null&&application.getPlayer().getMass() <= 0) {
+            g.setColor(Color.RED);
+            g.setFont(new Font("楷体", 1, 50));
+            g.drawString("犹豫就会败北！果断就会白给！", (int) (dimension.getWidth() / 4) ,  (int)(dimension.getHeight() / 3));
+        }
     }
 }

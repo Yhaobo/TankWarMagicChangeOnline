@@ -1,13 +1,9 @@
 package model.network.tool;
 
 import model.network.dto.StateSyncMessageInfo;
-import model.Constant;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
+import java.net.*;
 
 /**
  * 数据发送者
@@ -16,15 +12,15 @@ import java.net.SocketException;
  * @date 2020/10/31
  */
 public class UdpSender {
-    private DatagramSocket socket;
+    private MulticastSocket socket;
 
     private DatagramPacket packet;
 
-    public UdpSender(InetAddress destInetAddress) {
+    public UdpSender(InetAddress destInetAddress,int port) {
         try {
-            socket = new DatagramSocket();
-            packet = new DatagramPacket(new byte[0], 0, destInetAddress, Constant.Network.DATA_LISTEN_PORT);
-        } catch (SocketException e) {
+            socket = new MulticastSocket();
+            packet = new DatagramPacket(new byte[0], 0, destInetAddress, port);
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

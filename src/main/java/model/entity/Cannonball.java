@@ -28,21 +28,21 @@ public class Cannonball extends MovableUnit {
     /**
      * 加速度
      */
-    protected float acceleration = Constant.Cannonball.BASIC_ACCELERATION;
+    protected float acceleration = Constant.CannonballConstant.BASIC_ACCELERATION;
 
     public Cannonball() {
     }
 
-    public Cannonball(Position position, float direction) {
-        super(img, position, Constant.Cannonball.WIDTH, Constant.Cannonball.HEIGHT, Constant.Cannonball.COLLISION_RADIUS, Constant.Cannonball.COLLISION_DECELERATION_RATE, Constant.Cannonball.DENSITY);
-        super.direction = direction;
+    public Cannonball(Position position, float direction,float collisionRadius) {
+        super(img, position,collisionRadius, Constant.CannonballConstant.COLLISION_DECELERATION_RATE, Constant.CannonballConstant.DENSITY);
+        this.direction = direction;
     }
 
     @Override
     public void renew() {
         super.setImgAndTempImg(Cannonball.img);
         super.setCollisionRadius(collisionRadius);
-        super.collisionDecelerationRate = Constant.Cannonball.COLLISION_DECELERATION_RATE;
+        super.collisionDecelerationRate = Constant.CannonballConstant.COLLISION_DECELERATION_RATE;
     }
 
     @Override
@@ -54,20 +54,20 @@ public class Cannonball extends MovableUnit {
         //检查是否越过边界, 越过则反弹并减速
         if (x < 0 || x > MainPanel.getDimension().getWidth() - getWidth()) {
             direction = (float) (Math.PI - direction);
-            collisionDeceleration();
+//            collisionDeceleration();
         } else if (y < 0 || y > MainPanel.getDimension().getHeight() - getHeight()) {
             direction = -direction;
-            collisionDeceleration();
+//            collisionDeceleration();
         }
 
         //速度不断变慢
-        if (this.acceleration != 0) {
-            if (this.speed > 0) {
-                this.speed += this.acceleration * Math.pow(speed, 2);
-            } else {
-                this.speed = 0;
-            }
-        }
+//        if (this.acceleration != 0) {
+//            if (this.speed > 0) {
+//                this.speed += this.acceleration * Math.pow(speed, 2);
+//            } else {
+//                this.speed = 0;
+//            }
+//        }
         super.setPositionAndVerify(x, y);
     }
 

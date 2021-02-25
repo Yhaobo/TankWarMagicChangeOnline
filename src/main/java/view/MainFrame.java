@@ -67,9 +67,13 @@ public class MainFrame extends JFrame {
             //点击寻找房间按钮后
             scheduledThreadPool.execute(() -> {
                 hosts.clear();
-                final Set<InetAddress> hostAddressList = application.getNetworkService().discoverHost();
-                for (InetAddress inetAddress : hostAddressList) {
-                    hosts.addElement(inetAddress.getCanonicalHostName());
+                try {
+                    Set<InetAddress> hostAddressList = application.getNetworkService().discoverHost();
+                    for (InetAddress inetAddress : hostAddressList) {
+                        hosts.addElement(inetAddress.getHostAddress());
+                    }
+                } catch (SocketException | UnknownHostException socketException) {
+                    socketException.printStackTrace();
                 }
             });
         });
@@ -106,8 +110,8 @@ public class MainFrame extends JFrame {
             if (!(application.getNetworkService() instanceof HostNetworkService)) {
                 //启动主机网络服务
                 try {
-
                     final HostNetworkService hostNetworkService = new HostNetworkService();
+
                     application.setNetworkService(hostNetworkService);
                     rightSidePanel.setVisible(false);
                     packAndSetLocationRelativeToCenter();
@@ -122,11 +126,7 @@ public class MainFrame extends JFrame {
                     });
 
                     //监听连接端口
-                    scheduledThreadPool.execute(() -> {
-                        for (; ; ) {
-                            hostNetworkService.listenConnect();
-                        }
-                    });
+                    hostNetworkService.listenConnect();
                     scheduledThreadPool.execute(() -> {
                         hostNetworkService.respondConnect(scheduledThreadPool, application.getUnitList());
                     });
@@ -148,7 +148,7 @@ public class MainFrame extends JFrame {
         label.setFont(new Font("楷体", Font.BOLD, 20));
         label.setText("操作说明: 按【W】【A】【S】【D】来控制单位，按【J】【K】【L】射击");
         noticePanel.add(label);
-        this.add(noticePanel,BorderLayout.SOUTH);
+        this.add(noticePanel, BorderLayout.SOUTH);
     }
 
     private void packAndSetLocationRelativeToCenter() {
